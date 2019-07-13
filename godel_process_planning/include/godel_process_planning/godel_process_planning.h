@@ -1,6 +1,8 @@
 #ifndef GODEL_PROCESS_PLANNING_H
 #define GODEL_PROCESS_PLANNING_H
 
+#include <vector>
+
 #include "godel_msgs/BlendProcessPlanning.h"
 #include "godel_msgs/KeyenceProcessPlanning.h"
 

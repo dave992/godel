@@ -1,6 +1,7 @@
 #ifndef TRAJECTORY_UTILS_H
 #define TRAJECTORY_UTILS_H
 
+#include <vector>
 #include <Eigen/Geometry>
 
 namespace godel_process_planning
