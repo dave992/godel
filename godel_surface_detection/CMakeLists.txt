@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_planning_interface
   tf
   tf_conversions
+  eigen_conversions
   godel_process_path_generation
   godel_param_helpers
   godel_msgs
