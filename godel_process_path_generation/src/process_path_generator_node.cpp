@@ -39,7 +39,7 @@ const std::string OFFSET_POLYGON_SERVICE = "offset_polygon";
 const static double DISCRETIZATION_DISTANCE = 0.01; // m
 const static double TRAVERSE_HEIGHT = 0.075;        // m
 
-double dist(const Eigen::Affine3d& from, const Eigen::Affine3d& to)
+double dist(const Eigen::Isometry3d& from, const Eigen::Isometry3d& to)
 {
   return (from.translation() - to.translation()).norm();
 }

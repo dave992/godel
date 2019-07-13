@@ -467,7 +467,7 @@ bool SurfaceSegmentation::regularizeNormals(const std::vector<pcl::PointNormal>&
   Eigen::Vector3d x_vect, y_vect;
   Eigen::Matrix3d orient = Eigen::Matrix3d::Identity();
   poses.clear();
-  Eigen::Affine3d pose;
+  Eigen::Isometry3d pose;
   int look_ahead_ind;
   double dist = 0.0;
   x_vect = x_vect.UnitX();

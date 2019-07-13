@@ -20,9 +20,9 @@ static double quaternionDistance(const Eigen::Quaterniond& a, const Eigen::Quate
  * @param nominal_stop
  * @return \e nominal_stop if its closer, else 180 about Z from \e nominal_stop
  */
-static Eigen::Affine3d closestRotationalPose(const Eigen::Affine3d& start, const Eigen::Affine3d& nominal_stop)
+static Eigen::Isometry3d closestRotationalPose(const Eigen::Isometry3d& start, const Eigen::Isometry3d& nominal_stop)
 {
-  Eigen::Affine3d alt_candidate = nominal_stop * Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0, 0, 1));
+  Eigen::Isometry3d alt_candidate = nominal_stop * Eigen::AngleAxisd(M_PI, Eigen::Vector3d(0, 0, 1));
 
   const auto distance1 = quaternionDistance(Eigen::Quaterniond(start.rotation()),
                                             Eigen::Quaterniond(nominal_stop.rotation()));
@@ -38,13 +38,13 @@ static Eigen::Affine3d closestRotationalPose(const Eigen::Affine3d& start, const
   }
 }
 
-static EigenSTL::vector_Affine3d interpolateCartesian(const Eigen::Affine3d& start, const Eigen::Affine3d& stop,
+static EigenSTL::vector_Isometry3d interpolateCartesian(const Eigen::Isometry3d& start, const Eigen::Isometry3d& stop,
                                                       const double ds, const double dt)
 {
   // Required position change
   Eigen::Vector3d delta_translation = (stop.translation() - start.translation());
   Eigen::Vector3d start_pos = start.translation();
-  Eigen::Affine3d stop_prime = start.inverse()*stop; //This the stop pose represented in the start pose coordinate system
+  Eigen::Isometry3d stop_prime = start.inverse()*stop; //This the stop pose represented in the start pose coordinate system
   Eigen::AngleAxisd delta_rotation(stop_prime.rotation());
 
   // Calculate number of steps
@@ -60,10 +60,10 @@ static EigenSTL::vector_Affine3d interpolateCartesian(const Eigen::Affine3d& sta
   Eigen::Quaterniond stop_q (stop.rotation());
   double slerp_ratio = 1.0 / steps;
 
-  std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > result;
+  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d> > result;
   Eigen::Vector3d trans;
   Eigen::Quaterniond q;
-  Eigen::Affine3d pose;
+  Eigen::Isometry3d pose;
   result.reserve(steps+1);
   for (unsigned i = 0; i <= steps; ++i)
   {
@@ -75,23 +75,23 @@ static EigenSTL::vector_Affine3d interpolateCartesian(const Eigen::Affine3d& sta
   return result;
 }
 
-static EigenSTL::vector_Affine3d retractPath(const Eigen::Affine3d& start, double retract_dist, double traverse_height,
+static EigenSTL::vector_Isometry3d retractPath(const Eigen::Isometry3d& start, double retract_dist, double traverse_height,
                                              const double linear_disc, const double angular_disc)
 {
 
-  Eigen::Affine3d a = start * Eigen::Translation3d(0, 0, retract_dist);
+  Eigen::Isometry3d a = start * Eigen::Translation3d(0, 0, retract_dist);
 
   if (a.translation().z() > traverse_height)
   {
     traverse_height = a.translation().z() + linear_disc;
   }
-  Eigen::Affine3d b = a;
+  Eigen::Isometry3d b = a;
   b.translation().z() = traverse_height;
 
   auto segment_a = interpolateCartesian(start, a, linear_disc, angular_disc);
   auto segment_b = interpolateCartesian(a, b, linear_disc, angular_disc);
 
-  EigenSTL::vector_Affine3d result;
+  EigenSTL::vector_Isometry3d result;
   result.insert(result.end(), segment_a.begin(), segment_a.end());
   result.insert(result.end(), segment_b.begin() + 1, segment_b.end());
 
@@ -117,7 +117,7 @@ godel_process_planning::generateTransitions(const std::vector<geometry_msgs::Pos
     const auto& start_pose = segments[i].poses.front(); // First point in this segment
     const auto& end_pose = segments[i].poses.back();    // Last point in this segment
 
-    Eigen::Affine3d e_start, e_end;
+    Eigen::Isometry3d e_start, e_end;
     tf::poseMsgToEigen(start_pose, e_start);
     tf::poseMsgToEigen(end_pose, e_end);
 
@@ -137,7 +137,7 @@ godel_process_planning::generateTransitions(const std::vector<geometry_msgs::Pos
 }
 
 using DescartesConversionFunc =
-  boost::function<descartes_core::TrajectoryPtPtr (const Eigen::Affine3d &, const double)>;
+  boost::function<descartes_core::TrajectoryPtPtr (const Eigen::Isometry3d &, const double)>;
 
 godel_process_planning::DescartesTraj
 godel_process_planning::toDescartesTraj(const std::vector<geometry_msgs::PoseArray> &segments,
@@ -147,19 +147,19 @@ godel_process_planning::toDescartesTraj(const std::vector<geometry_msgs::PoseArr
   auto transitions = generateTransitions(segments, transition_params);
 
   DescartesTraj traj;
-  Eigen::Affine3d last_pose = createNominalTransform(segments.front().poses.front());
+  Eigen::Isometry3d last_pose = createNominalTransform(segments.front().poses.front());
 
   // Convert pose arrays to Eigen types
   auto eigen_segments = toEigenArrays(segments);
 
   // Inline function for adding a sequence of motions
   auto add_segment = [&traj, &last_pose, process_speed, conversion_fn, transition_params]
-                     (const EigenSTL::vector_Affine3d& poses, bool free_last)
+                     (const EigenSTL::vector_Isometry3d& poses, bool free_last)
   {
     // Create Descartes trajectory for the segment path
     for (std::size_t j = 0; j < poses.size(); ++j)
     {
-      Eigen::Affine3d this_pose = createNominalTransform(poses[j], transition_params.z_adjust);
+      Eigen::Isometry3d this_pose = createNominalTransform(poses[j], transition_params.z_adjust);
       // O(1) jerky - may need to revisit this time parameterization later. This at least allows
       // Descartes to perform some optimizations in its graph serach.
       double dt = (this_pose.translation() - last_pose.translation()).norm() / process_speed;

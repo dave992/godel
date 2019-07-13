@@ -69,7 +69,7 @@ bool openveronoi::ScanPlanner::generatePath(std::vector<geometry_msgs::PoseArray
     PolygonBoundary scan_boundary = scan::generateProfilometerScanPath(filtered_boundaries.front(), params);
 
     // 5 - Get boundary pose eigen
-    Eigen::Affine3d boundary_pose_eigen;
+    Eigen::Isometry3d boundary_pose_eigen;
     tf::poseMsgToEigen(boundary_pose, boundary_pose_eigen);
 
     // 6 - Transform points to world frame and generate pose
@@ -88,7 +88,7 @@ bool openveronoi::ScanPlanner::generatePath(std::vector<geometry_msgs::PoseArray
     std::transform(points.begin(), points.end(), std::back_inserter(scan_poses.poses),
                    [boundary_pose_eigen] (const geometry_msgs::Point& point) {
       geometry_msgs::Pose pose;
-      Eigen::Affine3d r = boundary_pose_eigen * Eigen::Translation3d(point.x, point.y, point.z);
+      Eigen::Isometry3d r = boundary_pose_eigen * Eigen::Translation3d(point.x, point.y, point.z);
       tf::poseEigenToMsg(r, pose);
       return pose;
     });

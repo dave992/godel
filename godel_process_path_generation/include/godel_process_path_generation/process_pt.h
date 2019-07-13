@@ -82,15 +82,15 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 public:
-  ProcessPt() : nominal_pose_(Eigen::Affine3d::Identity()){};
+  ProcessPt() : nominal_pose_(Eigen::Isometry3d::Identity()){};
   virtual ~ProcessPt(){};
 
-  const Eigen::Affine3d& getFrame() const { return frame_transform_; }
+  const Eigen::Isometry3d& getFrame() const { return frame_transform_; }
 
-  Eigen::Affine3d& pose() { return nominal_pose_; }
-  const Eigen::Affine3d& pose() const { return nominal_pose_; }
+  Eigen::Isometry3d& pose() { return nominal_pose_; }
+  const Eigen::Isometry3d& pose() const { return nominal_pose_; }
 
-  void setFrame(const std::pair<std::string, Eigen::Affine3d>& frame)
+  void setFrame(const std::pair<std::string, Eigen::Isometry3d>& frame)
   {
     pt_frame_ = frame.first;
     frame_transform_ = frame.second;
@@ -99,9 +99,9 @@ public:
   void setPosePosition(double x, double y, double z) { nominal_pose_.translation() << x, y, z; }
 
 private:
-  Eigen::Affine3d nominal_pose_;    /**<Default pose of process point */
+  Eigen::Isometry3d nominal_pose_;    /**<Default pose of process point */
   std::string pt_frame_;            /**<Frame pt is expressed in */
-  Eigen::Affine3d frame_transform_; /**<Transform from planning frame to current pt_frame */
+  Eigen::Isometry3d frame_transform_; /**<Transform from planning frame to current pt_frame */
   PositionConstraintPtr position_constraint_;
   OrientationConstraintPtr orientation_constraint_;
   //  kinematic_constraints::KinematicConstraintSetPtr constraints_;

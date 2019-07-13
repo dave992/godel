@@ -136,9 +136,9 @@ protected:
       create_box(desc, box);
 
       // transforming box
-      Eigen::Affine3d eigen3d;
+      Eigen::Isometry3d eigen3d;
       tf::transformTFToEigen(desc.transform, eigen3d);
-      pcl::transformPointCloud(box, box, Eigen::Affine3f(eigen3d));
+      pcl::transformPointCloud(box, box, Eigen::Isometry3f(eigen3d));
 
       // concatenating box
       full_cloud_ += box;
@@ -176,7 +176,7 @@ protected:
 
     // transforms
     tf::Transform t;
-    Eigen::Affine3d eigen3d;
+    Eigen::Isometry3d eigen3d;
 
     // ================================ create top and bottom patches
     // ===============================
@@ -187,12 +187,12 @@ protected:
     // transform cloud to top
     t = tf::Transform(tf::Quaternion::getIdentity(), tf::Vector3(0, 0, 0.5f * desc.size.z()));
     tf::transformTFToEigen(t, eigen3d);
-    pcl::transformPointCloud(temp, top, Eigen::Affine3f(eigen3d));
+    pcl::transformPointCloud(temp, top, Eigen::Isometry3f(eigen3d));
 
     // transform cloud to bottom
     t = tf::Transform(tf::Quaternion::getIdentity(), tf::Vector3(0, 0, 0.5f * -desc.size.z()));
     tf::transformTFToEigen(t, eigen3d);
-    pcl::transformPointCloud(temp, bottom, Eigen::Affine3f(eigen3d));
+    pcl::transformPointCloud(temp, bottom, Eigen::Isometry3f(eigen3d));
 
     // concatenate
     box_points += top;
@@ -208,13 +208,13 @@ protected:
     t = tf::Transform(tf::Quaternion(tf::Vector3(1, 0, 0), M_PI_2),
                       tf::Vector3(0, 0.5f * desc.size.y(), 0));
     tf::transformTFToEigen(t, eigen3d);
-    pcl::transformPointCloud(temp, front, Eigen::Affine3f(eigen3d));
+    pcl::transformPointCloud(temp, front, Eigen::Isometry3f(eigen3d));
 
     // transform cloud to rear
     t = tf::Transform(tf::Quaternion(tf::Vector3(1, 0, 0), M_PI_2),
                       tf::Vector3(0, 0.5f * -desc.size.y(), 0));
     tf::transformTFToEigen(t, eigen3d);
-    pcl::transformPointCloud(temp, rear, Eigen::Affine3f(eigen3d));
+    pcl::transformPointCloud(temp, rear, Eigen::Isometry3f(eigen3d));
 
     box_points += front;
     box_points += rear;
@@ -229,13 +229,13 @@ protected:
     t = tf::Transform(tf::Quaternion(tf::Vector3(0, 1, 0), M_PI_2),
                       tf::Vector3(0.5f * desc.size.x(), 0, 0));
     tf::transformTFToEigen(t, eigen3d);
-    pcl::transformPointCloud(temp, left, Eigen::Affine3f(eigen3d));
+    pcl::transformPointCloud(temp, left, Eigen::Isometry3f(eigen3d));
 
     // transform cloud to right
     t = tf::Transform(tf::Quaternion(tf::Vector3(0, 1, 0), M_PI_2),
                       tf::Vector3(0.5f * -desc.size.x(), 0, 0));
     tf::transformTFToEigen(t, eigen3d);
-    pcl::transformPointCloud(temp, right, Eigen::Affine3f(eigen3d));
+    pcl::transformPointCloud(temp, right, Eigen::Isometry3f(eigen3d));
 
     box_points += left;
     box_points += right;

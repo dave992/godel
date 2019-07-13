@@ -6,7 +6,7 @@
 namespace godel_process_planning
 {
 // Cartesian Interpolation
-typedef std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > PoseVector;
+typedef std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d> > PoseVector;
 
 /**
    * @brief Creates a vector of poses representing linear spatial and rotational interpolation
@@ -16,7 +16,7 @@ typedef std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> >
    * @param ds The cartesian distance (m) between intermediate points
    * @return Sequence of poses
    */
-PoseVector interpolateCartesian(const Eigen::Affine3d& start, const Eigen::Affine3d& stop,
+PoseVector interpolateCartesian(const Eigen::Isometry3d& start, const Eigen::Isometry3d& stop,
                                 double ds);
 
 // Joint Interpolation

@@ -139,7 +139,7 @@ bool MeshImporter::calculateSimpleBoundary(const pcl::PolygonMesh& input_mesh)
   applyConcaveHull(*points, coeffs, polygon);
 
   PolygonBoundary pbound;
-  Eigen::Affine3d plane_inverse = plane_frame_.inverse();
+  Eigen::Isometry3d plane_inverse = plane_frame_.inverse();
   for (int i = 0; i < polygon.polygon.points.size(); i++)
   {
     geometry_msgs::Point32& p = polygon.polygon.points[i];
@@ -235,7 +235,7 @@ bool MeshImporter::calculateBoundaryData(const pcl::PolygonMesh& input_mesh)
   pcl_godel::geometry::getBoundBoundaryHalfEdges(mesh, boundary_he_indices);
 
   // For each boundary, project boundary points onto plane and add to boundaries_
-  Eigen::Affine3d plane_inverse = plane_frame_.inverse(); // Pre-compute inverse
+  Eigen::Isometry3d plane_inverse = plane_frame_.inverse(); // Pre-compute inverse
   for (std::vector<Mesh::HalfEdgeIndices>::const_iterator boundary = boundary_he_indices.begin(),
                                                           b_end = boundary_he_indices.end();
        boundary != b_end; ++boundary)

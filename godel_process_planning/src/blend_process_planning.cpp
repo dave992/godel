@@ -31,7 +31,7 @@ const static std::string JOINT_TOPIC_NAME =
  * @param dt The upper limit of time from the previous point to achieve this one
  * @return A descartes trajectory point encapsulating a move to this pose
  */
-descartes_core::TrajectoryPtPtr toDescartesBlendPt(const Eigen::Affine3d& pose, double dt)
+descartes_core::TrajectoryPtPtr toDescartesBlendPt(const Eigen::Isometry3d& pose, double dt)
 {
   using namespace descartes_trajectory;
   using namespace descartes_core;

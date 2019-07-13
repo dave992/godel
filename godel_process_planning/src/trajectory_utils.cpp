@@ -45,8 +45,8 @@ static std::vector<double> interpolateJointSteps(const std::vector<double>& star
 }
 
 godel_process_planning::PoseVector
-godel_process_planning::interpolateCartesian(const Eigen::Affine3d& start,
-                                             const Eigen::Affine3d& stop, double ds)
+godel_process_planning::interpolateCartesian(const Eigen::Isometry3d& start,
+                                             const Eigen::Isometry3d& stop, double ds)
 {
   // Required position change
   Eigen::Vector3d delta = (stop.translation() - start.translation());
@@ -69,7 +69,7 @@ godel_process_planning::interpolateCartesian(const Eigen::Affine3d& start,
   {
     Eigen::Vector3d trans = start_pos + step * i;
     Eigen::Quaterniond q = start_q.slerp(slerp_ratio * i, stop_q);
-    Eigen::Affine3d pose(Eigen::Translation3d(trans) * q);
+    Eigen::Isometry3d pose(Eigen::Translation3d(trans) * q);
     result.push_back(pose);
   }
   return result;

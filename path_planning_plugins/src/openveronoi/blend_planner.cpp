@@ -80,9 +80,9 @@ bool openveronoi::BlendPlanner::generatePath(std::vector<geometry_msgs::PoseArra
     p.orientation.w = 1.0;
 
     // Transform points to world frame and generate pose
-    Eigen::Affine3d boundary_pose_eigen;
-    Eigen::Affine3d eigen_p;
-    Eigen::Affine3d result;
+    Eigen::Isometry3d boundary_pose_eigen;
+    Eigen::Isometry3d eigen_p;
+    Eigen::Isometry3d result;
 
     tf::poseMsgToEigen(boundary_pose, boundary_pose_eigen);
 

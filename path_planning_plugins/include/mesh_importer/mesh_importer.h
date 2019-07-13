@@ -83,7 +83,7 @@ private:
    */
   bool computePlaneCoefficients(Cloud::ConstPtr cloud, Eigen::Vector4d& output);
 
-  Eigen::Affine3d plane_frame_;          /**< @brief Transform to local frame of plane */
+  Eigen::Isometry3d plane_frame_;          /**< @brief Transform to local frame of plane */
   PolygonBoundaryCollection boundaries_; /**< @brief List of boundaries. External boundary must be
                                             ordered CCW, internal CW */
 };

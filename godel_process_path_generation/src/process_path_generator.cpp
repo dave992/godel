@@ -41,8 +41,8 @@ void operator<<(ProcessPt& pr_pt, const PolygonPt& pg_pt)
 
 void ProcessPathGenerator::addInterpolatedProcessPts(const ProcessPt& start, const ProcessPt& end)
 {
-  const Eigen::Affine3d& p1 = start.pose();
-  const Eigen::Affine3d& p2 = end.pose();
+  const Eigen::Isometry3d& p1 = start.pose();
+  const Eigen::Isometry3d& p2 = end.pose();
   double sep = (p2.translation() - p1.translation()).norm();
   if (sep > max_discretization_distance_)
   {

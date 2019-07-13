@@ -11,8 +11,8 @@ namespace godel_process_planning
 
 struct ConnectingPath
 {
-  EigenSTL::vector_Affine3d depart;
-  EigenSTL::vector_Affine3d approach;
+  EigenSTL::vector_Isometry3d depart;
+  EigenSTL::vector_Isometry3d approach;
 };
 
 struct TransitionParameters
@@ -43,7 +43,7 @@ std::vector<ConnectingPath> generateTransitions(const std::vector<geometry_msgs:
 godel_process_planning::DescartesTraj
 toDescartesTraj(const std::vector<geometry_msgs::PoseArray>& segments,
                 const double process_speed, const TransitionParameters& transition_params,
-                boost::function<descartes_core::TrajectoryPtPtr(const Eigen::Affine3d&, const double)> conversion_fn);
+                boost::function<descartes_core::TrajectoryPtPtr(const Eigen::Isometry3d&, const double)> conversion_fn);
 
 
 }

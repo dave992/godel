@@ -32,41 +32,41 @@ const static std::string DEFAULT_MOVEIT_PLANNER_ID = "RRTConnectkConfigDefault";
 const static std::string DEFAULT_MOVEIT_FRAME_ID = "world_frame";
 const static std::string DEFAULT_MOVEIT_PLANNING_SERVICE_NAME = "plan_kinematic_path";
 
-Eigen::Affine3d godel_process_planning::createNominalTransform(const geometry_msgs::Pose& ref_pose,
+Eigen::Isometry3d godel_process_planning::createNominalTransform(const geometry_msgs::Pose& ref_pose,
                                                                const geometry_msgs::Point& pt)
 {
-  Eigen::Affine3d eigen_pose;
+  Eigen::Isometry3d eigen_pose;
   Eigen::Vector3d eigen_pt;
 
   tf::poseMsgToEigen(ref_pose, eigen_pose);
   tf::pointMsgToEigen(pt, eigen_pt);
 
   // Translation transform
-  Eigen::Affine3d to_point;
+  Eigen::Isometry3d to_point;
   to_point = Eigen::Translation3d(eigen_pt);
 
   // Reverse the Z axis
-  Eigen::Affine3d flip_z;
+  Eigen::Isometry3d flip_z;
   flip_z = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY());
 
   return eigen_pose * to_point * flip_z;
 }
 
-Eigen::Affine3d godel_process_planning::createNominalTransform(const geometry_msgs::Pose& ref_pose,
+Eigen::Isometry3d godel_process_planning::createNominalTransform(const geometry_msgs::Pose& ref_pose,
                                                                const double z_adjust)
 {
-  Eigen::Affine3d eigen_pose;
+  Eigen::Isometry3d eigen_pose;
 
   tf::poseMsgToEigen(ref_pose, eigen_pose);
 
   return createNominalTransform(eigen_pose, z_adjust);
 }
 
-Eigen::Affine3d godel_process_planning::createNominalTransform(const Eigen::Affine3d &ref_pose,
+Eigen::Isometry3d godel_process_planning::createNominalTransform(const Eigen::Isometry3d &ref_pose,
                                                                const double z_adjust)
 {
   // Reverse the Z axis
-  Eigen::Affine3d flip_z;
+  Eigen::Isometry3d flip_z;
   flip_z = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY());
 
   return ref_pose * Eigen::Translation3d(0, 0, z_adjust) * flip_z;
@@ -178,7 +178,7 @@ std::vector<double> godel_process_planning::getCurrentJointState(const std::stri
 }
 
 godel_process_planning::DescartesTraj
-godel_process_planning::createLinearPath(const Eigen::Affine3d& start, const Eigen::Affine3d& stop,
+godel_process_planning::createLinearPath(const Eigen::Isometry3d& start, const Eigen::Isometry3d& stop,
                                          double ds)
 {
   using namespace descartes_trajectory;
@@ -332,9 +332,9 @@ double godel_process_planning::freeSpaceCostFunction(const std::vector<double> &
   return cost;
 }
 
-EigenSTL::vector_Affine3d godel_process_planning::linearMoveZ(const Eigen::Affine3d &origin, double step_size, int steps)
+EigenSTL::vector_Isometry3d godel_process_planning::linearMoveZ(const Eigen::Isometry3d &origin, double step_size, int steps)
 {
-  EigenSTL::vector_Affine3d result (steps);
+  EigenSTL::vector_Isometry3d result (steps);
 
   for (int i = 0; i < steps; ++i)
   {
@@ -344,20 +344,20 @@ EigenSTL::vector_Affine3d godel_process_planning::linearMoveZ(const Eigen::Affin
   return result;
 }
 
-EigenSTL::vector_Affine3d godel_process_planning::toEigenArray(const geometry_msgs::PoseArray &geom_poses)
+EigenSTL::vector_Isometry3d godel_process_planning::toEigenArray(const geometry_msgs::PoseArray &geom_poses)
 {
-  EigenSTL::vector_Affine3d result (geom_poses.poses.size());
+  EigenSTL::vector_Isometry3d result (geom_poses.poses.size());
   std::transform(geom_poses.poses.begin(), geom_poses.poses.end(), result.begin(), [](const geometry_msgs::Pose& pose) {
-    Eigen::Affine3d e;
+    Eigen::Isometry3d e;
     tf::poseMsgToEigen(pose, e);
     return e;
   });
   return result;
 }
 
-std::vector<EigenSTL::vector_Affine3d> godel_process_planning::toEigenArrays(const std::vector<geometry_msgs::PoseArray> &poses)
+std::vector<EigenSTL::vector_Isometry3d> godel_process_planning::toEigenArrays(const std::vector<geometry_msgs::PoseArray> &poses)
 {
-  std::vector<EigenSTL::vector_Affine3d> result (poses.size());
+  std::vector<EigenSTL::vector_Isometry3d> result (poses.size());
   std::transform(poses.begin(), poses.end(), result.begin(), [](const geometry_msgs::PoseArray& p) {
     return toEigenArray(p);
   });

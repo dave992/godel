@@ -21,7 +21,7 @@ typedef std::vector<descartes_core::TrajectoryPtPtr> DescartesTraj;
    * @param pt 3-dimensional offset from pose for the given point
    * @return Tool pose corresponding to this surface point
    */
-Eigen::Affine3d createNominalTransform(const geometry_msgs::Pose& ref_pose,
+Eigen::Isometry3d createNominalTransform(const geometry_msgs::Pose& ref_pose,
                                        const geometry_msgs::Point& pt);
 
 /**
@@ -30,10 +30,10 @@ Eigen::Affine3d createNominalTransform(const geometry_msgs::Pose& ref_pose,
    * @param pt 3-dimensional offset from pose for the given point
    * @return Tool pose corresponding to this surface point
    */
-Eigen::Affine3d createNominalTransform(const geometry_msgs::Pose& ref_pose, const double z_adjust = 0.0);
+Eigen::Isometry3d createNominalTransform(const geometry_msgs::Pose& ref_pose, const double z_adjust = 0.0);
 
 
-Eigen::Affine3d createNominalTransform(const Eigen::Affine3d& ref_pose, const double z_adjust = 0.0);
+Eigen::Isometry3d createNominalTransform(const Eigen::Isometry3d& ref_pose, const double z_adjust = 0.0);
 
 /**
  * @brief Given a path and robot model, this method creates a descartes planner and attempts to
@@ -77,7 +77,7 @@ std::vector<double> getCurrentJointState(const std::string& topic);
  * @param ds The distance (m) between points in the linear path; defaults to 10cm
  * @return A linear interpolated path from start to stop in Descartes format
  */
-DescartesTraj createLinearPath(const Eigen::Affine3d& start, const Eigen::Affine3d& stop,
+DescartesTraj createLinearPath(const Eigen::Isometry3d& start, const Eigen::Isometry3d& stop,
                                double ds = 0.1);
 /**
  * @brief Creates descartes trajectory consisting of joint interpolated positions from start to stop
@@ -185,11 +185,11 @@ inline std::vector<double> pickBestStartPose(const std::vector<double>& start,
  double freeSpaceCostFunction(const std::vector<double>& source,
                               const std::vector<double>& target);
 
- EigenSTL::vector_Affine3d linearMoveZ(const Eigen::Affine3d& origin, double step_size, int steps);
+ EigenSTL::vector_Isometry3d linearMoveZ(const Eigen::Isometry3d& origin, double step_size, int steps);
 
- EigenSTL::vector_Affine3d toEigenArray(const geometry_msgs::PoseArray& geom_poses);
+ EigenSTL::vector_Isometry3d toEigenArray(const geometry_msgs::PoseArray& geom_poses);
 
- std::vector<EigenSTL::vector_Affine3d> toEigenArrays(const std::vector<geometry_msgs::PoseArray>& poses);
+ std::vector<EigenSTL::vector_Isometry3d> toEigenArrays(const std::vector<geometry_msgs::PoseArray>& poses);
 
 }
 

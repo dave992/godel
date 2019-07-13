@@ -174,10 +174,10 @@ int main(int argc, char** argv)
     // transforming point_cloud
     if (read_transform(ph, CLOUD_TRANSFORM_PARAM, cloud_transform))
     {
-      Eigen::Affine3d eigen_transform;
+      Eigen::Isometry3d eigen_transform;
       tf::poseTFToEigen(cloud_transform, eigen_transform);
       pcl::transformPointCloud(*noise_cloud_ptr, *noise_cloud_ptr,
-                               (Eigen::Affine3f)(eigen_transform));
+                               (Eigen::Isometry3f)(eigen_transform));
     }
 
     // convert to msg

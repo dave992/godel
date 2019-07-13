@@ -28,7 +28,7 @@ using namespace irb2400_ikfast_manipulator_plugin;
 namespace abb_irb2400_descartes
 {
 AbbIrb2400RobotModel::AbbIrb2400RobotModel()
-    : world_to_base_(Eigen::Affine3d::Identity()), tool_to_tip_(Eigen::Affine3d::Identity())
+    : world_to_base_(Eigen::Isometry3d::Identity()), tool_to_tip_(Eigen::Isometry3d::Identity())
 {
 }
 
@@ -56,12 +56,12 @@ bool AbbIrb2400RobotModel::initialize(const std::string& robot_description,
   return true;
 }
 
-bool AbbIrb2400RobotModel::getAllIK(const Eigen::Affine3d& pose,
+bool AbbIrb2400RobotModel::getAllIK(const Eigen::Isometry3d& pose,
                                     std::vector<std::vector<double> >& joint_poses) const
 {
   std::vector<double> vfree(free_params_.size(), 0.0);
   KDL::Frame frame;
-  Eigen::Affine3d tool_pose = world_to_base_.frame_inv * pose * tool_to_tip_.frame;
+  Eigen::Isometry3d tool_pose = world_to_base_.frame_inv * pose * tool_to_tip_.frame;
   tf::transformEigenToKDL(tool_pose, frame);
 
   ikfast::IkSolutionList<IkReal> solutions;

@@ -157,7 +157,7 @@ bool SurfaceBlendingService::generateEdgePath(godel_surface_detection::detection
     // Convert eigen poses to geometry poses for messaging and visualization
     for(const auto& p : poses)
     {
-      Eigen::Affine3d pose(p.matrix());
+      Eigen::Isometry3d pose(p.matrix());
       tf::poseEigenToMsg(pose, geo_pose);
       edge_poses.poses.push_back(geo_pose);
     }
