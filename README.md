@@ -18,6 +18,8 @@ Godel: Austrian logician and mathematician http://en.wikipedia.org/wiki/Kurt_G%C
   wstool update
   rosdep install --from-paths . --ignore-src
   ```
+  On Ubuntu 18.04: 
+  Install flann 1.9.1+dfsg-7 (or higher) manually from https://launchpad.net/ubuntu/+source/flann to resolve LZ4 typedef conflicts.
 
 - Finally, to build:
   ```
