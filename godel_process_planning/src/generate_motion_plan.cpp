@@ -76,7 +76,7 @@ bool godel_process_planning::generateMotionPlan(const descartes_core::RobotModel
 
   // Now we perform the search using the starting costs from our estimation above
   descartes_planner::DAGSearch search (graph);
-  double cost = search.run(process_start_costs);
+  double cost = search.run();
   if (cost == std::numeric_limits<double>::max())
   {
     ROS_ERROR("%s: Failed to search graph. All points have IK, but process constraints (e.g velocity) "
