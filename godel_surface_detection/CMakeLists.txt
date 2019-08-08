@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
   godel_param_helpers
   godel_msgs
   godel_plugins
+  godel_qa_server
+  godel_scan_analysis
   godel_utils
   meshing_plugins_base
   path_planning_plugins_base
@@ -51,6 +53,8 @@ catkin_package(
     godel_param_helpers
     godel_msgs
     godel_plugins
+    godel_qa_server
+    godel_scan_analysis
     godel_utils
     meshing_plugins_base
     path_planning_plugins_base

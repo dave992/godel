@@ -10,11 +10,15 @@
 #include <pcl/filters/project_inliers.h>
 #include <ros/io.h>
 #include <thread>
+#include <ros/node_handle.h>
 
 static const double DOWNSAMPLING_LEAF = 0.005f;
 static const double EDGE_SEARCH_RADIUS = 0.01;
 static const double PLANE_INLIER_DISTANCE = 0.005;
 static const double PLANE_INLIER_THRESHOLD = 0.8;
+
+static const int MAX_CLUSTER_SIZE = 5000000;
+static const int MIN_CLUSTER_SIZE = 2500;
 
 
 // Custom boundary estimation
@@ -103,16 +107,27 @@ std::vector <pcl::PointIndices> SurfaceSegmentation::computeSegments(pcl::PointC
       boost::shared_ptr<pcl::search::Search<pcl::PointXYZRGB>> (new pcl::search::KdTree<pcl::PointXYZRGB>);
   pcl::RegionGrowing<pcl::PointXYZRGB, pcl::Normal> rg;
 
-  rg.setSmoothModeFlag (true); // Depends on the cloud being processed
-  rg.setSmoothnessThreshold (0.035);
-  rg.setCurvatureThreshold(1.0);
+  ros::NodeHandle nh;
+
+  bool smoothflag = nh.param<bool>("/wolf_smooth_flag", true);
+  double smoothness_thresh = nh.param<double>("/wolf_smooth_thresh", 0.05);
+  double curve_thresh = nh.param<double>("/wolf_curve_thresh", 1.0);
+  int nneighbors = nh.param<int>("/wolf_neighbors", 30);
+
+  rg.setSmoothModeFlag (smoothflag); // Depends on the cloud being processed
+  rg.setSmoothnessThreshold (smoothness_thresh);
+  rg.setCurvatureThreshold(curve_thresh);
+
 
   rg.setMaxClusterSize(MAX_CLUSTER_SIZE);
   rg.setSearchMethod (tree);
   rg.setMinClusterSize(MIN_CLUSTER_SIZE);
-  rg.setNumberOfNeighbours (NUM_NEIGHBORS);
+  rg.setNumberOfNeighbours (nneighbors);
 
   float resid_thresh = rg.getResidualThreshold();
+  ROS_INFO_STREAM("Residual test flag: " << resid_thresh);
+
+  double resid = nh.param<double>("/wolf_resid_thresh", resid_thresh);
 
   rg.setResidualTestFlag(true);
   rg.setResidualThreshold(resid_thresh);
@@ -631,6 +646,10 @@ void SurfaceSegmentation::removeNans()
 
 void SurfaceSegmentation::computeNormals()
 {
+
+  ros::NodeHandle nh;
+  double normal_radius = nh.param<double>("/wolf_normal_radius", 0.01);
+  ROS_INFO("COMPUTE NORMALS with radius %f!", normal_radius);
   // Determine the number of available cores
   pcl::NormalEstimationOMP<pcl::PointXYZRGB, pcl::Normal> ne;
   int nr_cores = std::thread::hardware_concurrency();
@@ -640,10 +659,11 @@ void SurfaceSegmentation::computeNormals()
   ne.setInputCloud (input_cloud_);
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB> ());
   ne.setSearchMethod (tree);
-  ne.setRadiusSearch(0.025);
+  ne.setRadiusSearch(normal_radius);
+  ne.setViewPoint(0, 0, 10);
 //  ne.setKSearch (100);
 
-  // Estimate the normals
+  // Estimate the nmals
   ne.compute (*normals_);
 }
 

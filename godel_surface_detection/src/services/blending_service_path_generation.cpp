@@ -9,7 +9,9 @@
 #include <segmentation/surface_segmentation.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <path_planning_plugins_base/path_planning_base.h>
+#include <std_msgs/String.h>
 
+#include <pcl/segmentation/extract_clusters.h>
 #include <swri_profiler/profiler.h>
 
 // Temporary constants for storing blending path `planning parameters
@@ -316,20 +318,268 @@ SurfaceBlendingService::generateProcessPath(const int& id,
   return result.paths.size() > 0;
 }
 
-godel_surface_detection::TrajectoryLibrary SurfaceBlendingService::generateMotionLibrary(
-    const godel_msgs::PathPlanningParameters& params)
+static void uploadParameters(const godel_msgs::BlendingPlanParameters& blend_params,
+                             const godel_msgs::ScanPlanParameters& scan_params)
 {
-  SWRI_PROFILE("generate-motion-library");
+  ros::NodeHandle nh;
+
+  const static std::string PARAM_BASE = "/process_planning_params/";
+  const static std::string SCAN_PARAM_BASE = "scan_params/";
+  const static std::string BLEND_PARAM_BASE = "blend_params/";
+
+  const static std::string SPINDLE_SPD_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "spindle_speed";
+
+  const static std::string APPROACH_SPD_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "approach_speed";
+  const static std::string BLENDING_SPD_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "blending_speed";
+  const static std::string RETRACT_SPD_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "retract_speed";
+  const static std::string TRAVERSE_SPD_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "traverse_speed";
+  const static std::string Z_ADJUST_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "z_adjust";
+
+  const static std::string TOOL_RADIUS_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "tool_radius";
+  const static std::string TOOL_OVERLAP_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "overlap";
+  const static std::string DISCRETIZATION_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "discretization";
+  const static std::string TRAVERSE_HEIGHT_PARAM = PARAM_BASE + BLEND_PARAM_BASE + "traverse_height";
+
+  const static std::string APPROACH_DISTANCE_PARAM = PARAM_BASE + SCAN_PARAM_BASE + "approach_distance";
+  const static std::string QUALITY_METRIC_PARAM = PARAM_BASE + SCAN_PARAM_BASE + "quality_metric";
+  const static std::string WINDOW_WIDTH_PARAM = PARAM_BASE + SCAN_PARAM_BASE + "window_width";
+  const static std::string MIN_QA_VALUE_PARAM = PARAM_BASE + SCAN_PARAM_BASE + "min_qa_value";
+  const static std::string MAX_QA_VALUE_PARAM = PARAM_BASE + SCAN_PARAM_BASE + "max_qa_value";
+  const static std::string SCAN_OVERLAP_PARAM = PARAM_BASE + SCAN_PARAM_BASE + "overlap";
+  const static std::string SCAN_WIDTH_PARAM = PARAM_BASE + SCAN_PARAM_BASE + "scan_width";
+
+
+  nh.setParam(SPINDLE_SPD_PARAM, blend_params.spindle_speed);
+  nh.setParam(APPROACH_SPD_PARAM, blend_params.approach_spd);
+  nh.setParam(BLENDING_SPD_PARAM, blend_params.blending_spd);
+  nh.setParam(RETRACT_SPD_PARAM, blend_params.retract_spd);
+  nh.setParam(TRAVERSE_SPD_PARAM, blend_params.traverse_spd);
+
+  nh.setParam(Z_ADJUST_PARAM, blend_params.z_adjust);
+  nh.setParam(DISCRETIZATION_PARAM, blend_params.discretization);
+  nh.setParam(TOOL_RADIUS_PARAM, blend_params.tool_radius);
+  nh.setParam(TOOL_OVERLAP_PARAM, blend_params.overlap);
+  nh.setParam(TRAVERSE_HEIGHT_PARAM, blend_params.safe_traverse_height);
+
+  nh.setParam(APPROACH_DISTANCE_PARAM, scan_params.approach_distance);
+  nh.setParam(QUALITY_METRIC_PARAM, scan_params.quality_metric);
+  nh.setParam(WINDOW_WIDTH_PARAM, scan_params.window_width);
+  nh.setParam(MIN_QA_VALUE_PARAM, scan_params.min_qa_value);
+  nh.setParam(MAX_QA_VALUE_PARAM, scan_params.max_qa_value);
+  nh.setParam(SCAN_OVERLAP_PARAM, scan_params.overlap);
+  nh.setParam(SCAN_WIDTH_PARAM, scan_params.scan_width);
+}
+
+godel_surface_detection::TrajectoryLibrary SurfaceBlendingService::generateMotionLibrary(const godel_msgs::BlendingPlanParameters& blend_params, const godel_msgs::ScanPlanParameters& scan_params)
+{
   std::vector<int> selected_ids;
   surface_server_.getSelectedIds(selected_ids);
+  return generateMotionLibrary(blend_params, scan_params, selected_ids);
+}
 
+// static helper function
+static std::vector<pcl::PointCloud<pcl::PointXYZRGB>>
+computeQAClusters(const pcl::PointCloud<pcl::PointXYZRGB>& macro_surface,
+                  const pcl::PointCloud<pcl::PointXYZRGB>& laser_surface,
+                  const cat_laser_scan_qa::TorchCutQAResult& qa_result)
+{
+  ROS_INFO("Computing QA clusters");
+  if (laser_surface.empty())
+  {
+    ROS_WARN("No laser surface points - Returning no QA operations");
+    return {};
+  }
+
+  if (qa_result.high_point_indices.indices.empty())
+  {
+    ROS_INFO("No high points detected in laser scan cloud - no QA to perform.");
+    return {};
+  }
+  ROS_WARN_STREAM("Size of high points = " << qa_result.high_point_indices.indices.size());
+
+
+  // Let's extract the high points
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr high_points (new pcl::PointCloud<pcl::PointXYZRGB>());
+  pcl::copyPointCloud(laser_surface, qa_result.high_point_indices.indices, *high_points);
+
+  ROS_WARN_STREAM("HP= " << high_points->size());
+
+  if (high_points->empty())
+  {
+    ROS_ERROR("Something wrong in compute QA clusters");
+    return {};
+  }
+
+  // We want to cluster the out of tolerance regions ahead of time...
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr oot_tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
+  oot_tree->setInputCloud(high_points);
+
+  pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> oot_ec;
+  oot_ec.setClusterTolerance(0.002);
+  oot_ec.setMinClusterSize(3);
+  oot_ec.setSearchMethod(oot_tree);
+  oot_ec.setInputCloud(high_points);
+  std::vector<pcl::PointIndices> oot_indices;
+  oot_ec.extract(oot_indices);
+
+  std::size_t total_size = 0;
+  for (const auto& cluster : oot_indices)
+  {
+    total_size += cluster.indices.size();
+  }
+
+  if (total_size == 0)
+  {
+    ROS_INFO("After filtering, no out of tolerance high points remain");
+    return {};
+  }
+  else
+  {
+    ROS_INFO("After filtering, %lu high points remain", total_size);
+  }
+
+  // 'Dilate' the points by finding neighbors of the high points
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
+  tree->setInputCloud(macro_surface.makeShared());
+
+  std::set<int> indices;
+  for (const auto& oot_cluster : oot_indices)
+  for (const auto& idx : oot_cluster.indices)
+  {
+    const auto& pt = (*high_points)[idx];
+    std::vector<int> local_indices;
+    std::vector<float> distances;
+    tree->radiusSearch(pt, 0.01, local_indices, distances);
+    indices.insert(local_indices.begin(), local_indices.end());
+  }
+
+  ROS_INFO_STREAM("input cloud had " << high_points->size() << "points and after dilation we have " << indices.size());
+
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr dilated_cloud (new pcl::PointCloud<pcl::PointXYZRGB>());
+  std::vector<int> dilated_indices;
+  dilated_indices.insert(dilated_indices.end(), indices.begin(), indices.end());
+  pcl::copyPointCloud(macro_surface, dilated_indices, *dilated_cloud);
+
+
+  // Cluster the high points
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree2 (new pcl::search::KdTree<pcl::PointXYZRGB>);
+  tree2->setInputCloud(dilated_cloud);
+
+  pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
+  ec.setClusterTolerance(0.01);
+  ec.setMinClusterSize(10);
+//  ec.setMaxClusterSize(25000);
+  ec.setSearchMethod(tree2);
+  ec.setInputCloud(dilated_cloud);
+
+  std::vector<pcl::PointIndices> cluster_indices;
+  ec.extract(cluster_indices);
+
+  ROS_INFO_STREAM("After clustering we have " << cluster_indices.size() << " clusters");
+
+  // Assemble results
+  std::vector<pcl::PointCloud<pcl::PointXYZRGB>> clusters (cluster_indices.size());
+  for (std::size_t i = 0; i < cluster_indices.size(); ++i)
+  {
+    ROS_INFO_STREAM("Cluster " << i << " has " << cluster_indices[i].indices.size() << " points");
+    pcl::copyPointCloud(*dilated_cloud, cluster_indices[i].indices, clusters[i]);
+  }
+
+  return clusters;
+}
+
+godel_surface_detection::TrajectoryLibrary
+SurfaceBlendingService::generateQAMotionLibrary(const godel_msgs::BlendingPlanParameters& blend_params,
+                                                const godel_msgs::ScanPlanParameters& scan_params)
+{
+  // Define return value library which will get populated for each surface
+  godel_surface_detection::TrajectoryLibrary lib;
+
+  std::ostringstream ss;
+
+  // Identify any outstanding QA 'jobs'
+  for (const auto& q : qa_server_)
+  {
+    // For each active job...
+    const int key = q.first;
+    const godel_qa_server::QAJob& job = q.second;
+
+    // Examine the QA point cloud and pull out "patches" that need to be re-processed; each patch is a euclidean
+    // cluster
+    pcl::PointCloud<pcl::PointXYZRGB> surface_cloud, laser_cloud;
+    data_coordinator_.getCloud(godel_surface_detection::data::surface_cloud, key, surface_cloud);
+    data_coordinator_.getCloud(godel_surface_detection::data::laser_cloud, key, laser_cloud);
+    std::string surface_name;
+    data_coordinator_.getSurfaceName(key, surface_name);
+
+    auto clusters = computeQAClusters(surface_cloud, laser_cloud, job.iterations().back().qa_result);
+    ss << "Surface " << q.first << " has ";
+    if (clusters.empty())
+    {
+      ss << "no out of tolerance zones!";
+    }
+    else
+    {
+      ss << clusters.size() << " out of tolerance zones. Generating motion plans.";
+    }
+
+    std_msgs::String str_msg;
+    str_msg.data = ss.str();
+    qa_feedback_pub_.publish(str_msg);
+
+    // For each cluster, lets create a new record in the data coordinator whilst building a list of new surfaces
+    std::vector<int> new_surface_ids;
+
+    for (std::size_t i = 0; i < clusters.size(); ++i)
+    {
+      auto new_id = data_coordinator_.addRecord(surface_cloud, clusters[i]);
+      ROS_INFO_STREAM("Creating a new qa surface w/ id = " << new_id);
+      const std::string new_surface_name = surface_name + "_qa" + std::to_string(i);
+      data_coordinator_.setSurfaceName(new_id, new_surface_name);
+
+      pcl::PolygonMesh mesh;
+      surface_detection_.meshCloud(clusters[i], mesh);
+      data_coordinator_.setSurfaceMesh(new_id, mesh);
+
+      if (mesh.polygons.size() > 0)
+      {
+        new_surface_ids.push_back(new_id);
+      }
+      else
+      {
+        ROS_ERROR_STREAM("Mesh for surface " << key << " cluster " << i << " new id = " << new_id << " has no verts");
+      }
+    }
+
+    // Generate a new motion library with plans for each surface patch
+    auto patch_plans = generateMotionLibrary(blend_params, scan_params, new_surface_ids);
+
+    // Merge the motion library with the overall results
+    lib.merge(patch_plans);
+  }
+
+  return lib;
+}
+
+godel_surface_detection::TrajectoryLibrary
+SurfaceBlendingService::generateMotionLibrary(const godel_msgs::BlendingPlanParameters& blend_params,
+                                              const godel_msgs::ScanPlanParameters& scan_params,
+                                              const std::vector<int> &selected_surface_ids)
+{
+  SWRI_PROFILE("generate-motion-library");
   godel_surface_detection::TrajectoryLibrary lib;
   // Clear previous results
   process_path_results_.blend_poses_.clear();
   process_path_results_.edge_poses_.clear();
   process_path_results_.scan_poses_.clear();
 
-  for (const auto& id : selected_ids)
+  // super hack: Our path planning plugins get created momentarily and must load their parameters from plugins
+  // so here we update a set of fixed parameters for their purposes
+  uploadParameters(blend_params, scan_params);
+  ROS_INFO_STREAM("**BLEND_PARAMS**\n" << blend_params);
+  ROS_INFO_STREAM("**SCAN_PARAMS**\n" << scan_params);
+
+  for (const auto& id : selected_surface_ids)
   {
     // Generate motion plan
     ProcessPathResult paths;
@@ -355,36 +605,6 @@ godel_surface_detection::TrajectoryLibrary SurfaceBlendingService::generateMotio
         ROS_ERROR_STREAM("Tried to process an unrecognized path type: " << vt.first);
     }
 
-    ros::NodeHandle nh;
-
-    godel_msgs::BlendingPlanParameters blend_params;
-    blend_params.margin = params.margin;
-    blend_params.overlap = params.overlap;
-    blend_params.tool_radius = params.tool_radius;
-    blend_params.discretization = params.discretization;
-    blend_params.safe_traverse_height = params.traverse_height;
-    nh.getParam(SPINDLE_SPEED_PARAM, blend_params.spindle_speed);
-    nh.getParam(APPROACH_SPD_PARAM, blend_params.approach_spd);
-    nh.getParam(BLENDING_SPD_PARAM, blend_params.blending_spd);
-    nh.getParam(RETRACT_SPD_PARAM, blend_params.retract_spd);
-    nh.getParam(TRAVERSE_SPD_PARAM, blend_params.traverse_spd);
-    nh.getParam(Z_ADJUST_PARAM, blend_params.z_adjust);
-
-    godel_msgs::ScanPlanParameters scan_params;
-    scan_params.scan_width = params.scan_width;
-    scan_params.margin = params.margin;
-    scan_params.overlap = params.overlap;
-    scan_params.scan_width = params.scan_width;
-    nh.getParam(APPROACH_DISTANCE_PARAM, scan_params.approach_distance);
-    nh.getParam(TRAVERSE_SPD_PARAM, scan_params.traverse_spd);
-    nh.getParam(QUALITY_METRIC_PARAM, scan_params.quality_metric);
-    nh.getParam(WINDOW_WIDTH_PARAM, scan_params.window_width);
-    nh.getParam(MIN_QA_VALUE_PARAM, scan_params.min_qa_value);
-    nh.getParam(MAX_QA_VALUE_PARAM, scan_params.min_qa_value);
-//    nh.getParam(Z_ADJUST_PARAM, scan_params.z_adjust);
-    scan_params.z_adjust = 0.0; // Until we fix these parameters and do not share them among the
-                                // different processes, I'm only applying this to blend paths.
-
     // Generate trajectory plans from motion plan
     {
       SWRI_PROFILE("motion-planning");
@@ -394,14 +614,16 @@ godel_surface_detection::TrajectoryLibrary SurfaceBlendingService::generateMotio
                                                      scan_params);
 
         for (std::size_t k = 0; k < plan.plans.size(); ++k)
+        {
+          plan.plans[k].second.id = id;
           lib.get()[plan.plans[k].first] = plan.plans[k].second;
+        }
       }
     }
   }
 
   return lib;
 }
-
 
 ProcessPlanResult
 SurfaceBlendingService::generateProcessPlan(const std::string& name,
@@ -420,6 +642,7 @@ SurfaceBlendingService::generateProcessPlan(const std::string& name,
     godel_msgs::BlendProcessPlanning srv;
     srv.request.path.segments = poses;
     srv.request.params = params;
+    srv.request.params.tilt = true;
 
     success = blend_planning_client_.call(srv);
     process_plan = srv.response.plan;
@@ -429,6 +652,7 @@ SurfaceBlendingService::generateProcessPlan(const std::string& name,
     godel_msgs::BlendProcessPlanning srv;
     srv.request.path.segments = poses;
     srv.request.params = params;
+    srv.request.params.tilt = false;
 
     success = blend_planning_client_.call(srv);
     process_plan = srv.response.plan;

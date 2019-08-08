@@ -27,6 +27,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/pcl_base.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 
 namespace godel_surface_detection
 {
@@ -411,9 +412,32 @@ namespace godel_surface_detection
       return name;
     }
 
+    bool SurfaceDetection::meshCloud(const CloudRGB &cloud, pcl::PolygonMesh &mesh) const
+    {
+      // Load the code to perform meshing dynamically
+      pluginlib::ClassLoader<meshing_plugins_base::MeshingBase>
+          poly_loader("meshing_plugins_base", "meshing_plugins_base::MeshingBase");
+      boost::shared_ptr<meshing_plugins_base::MeshingBase> mesher;
+
+      try
+      {
+        mesher = poly_loader.createInstance(getMeshingPluginName());
+      }
+      catch(pluginlib::PluginlibException& ex)
+      {
+        ROS_ERROR("The plugin failed to load for some reason. Error: %s", ex.what());
+        return false;
+      }
+
+      mesher->init(cloud);
+      return mesher->generateMesh(mesh);
+    }
+
     void SurfaceDetection::filterFullCloud()
     {
       pcl::PointCloud<pcl::PointXYZRGB>::Ptr intermediate_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
+
+      ros::NodeHandle nh;
 
       //remove the table using the passthrough filter
       pcl::PassThrough<pcl::PointXYZRGB> pass;
@@ -421,9 +445,10 @@ namespace godel_surface_detection
       const std::string FILTER_DIRECTION = "z";
       pass.setFilterFieldName (FILTER_DIRECTION);
       //keep poin clouds with these limits
-      const double MINIMUM_DISTANCE = 0.01; // 1 cm
-      const double MAXIMUM_DISTANCE = 1.0; // 1 m
-      pass.setFilterLimits (MINIMUM_DISTANCE, MAXIMUM_DISTANCE);
+      double min_distance = nh.param<double>("/wolf_min_distance", 0.24);
+      ROS_INFO_STREAM("WOLF MIN DISTANCE = " << min_distance);
+      const double MAXIMUM_DISTANCE = 2.0;
+      pass.setFilterLimits (min_distance, MAXIMUM_DISTANCE);
       pass.filter (*intermediate_cloud_ptr);
 
       //downsample the full cloud using the voxelgrid filter method
@@ -433,6 +458,13 @@ namespace godel_surface_detection
                        INPUT_CLOUD_VOXEL_FILTER_SIZE,
                        INPUT_CLOUD_VOXEL_FILTER_SIZE);
       vox.filter(*process_cloud_ptr_);
+
+      pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
+      sor.setInputCloud (process_cloud_ptr_);
+      sor.setMeanK (15);
+      sor.setStddevMulThresh(2.0);
+      sor.filter (*process_cloud_ptr_);
+
     }
   } /* end namespace detection */
 } /* end namespace godel_surface_detection */

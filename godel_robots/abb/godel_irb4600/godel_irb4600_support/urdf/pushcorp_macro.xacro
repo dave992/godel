@@ -1,0 +1,88 @@
+<?xml version="1.0" ?>
+
+<!-- Automate 2017 Demo Cell "Structures" -->
+
+<!-- Exports macro: "xacro:automate_demo_cell" with 1 arg: prefix -->
+<!-- Root link: ${prefix}demo_cell_base_link -->
+<!-- Origin is at the robot (IRB 1200) mounting location -->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <link name="tool_base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://godel_irb4600_support/meshes/visual/pushcorp.stl"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://godel_irb4600_support/meshes/collision/pushcorp.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="tcp_frame"/>
+
+  <link name="keyence_tcp_frame"/>
+
+  <link name="keyence_sensor_optical_frame"/>
+
+  <link name="ensenso_sensor_optical_frame"/>
+
+  <link name="kinect2_move_frame"/>
+
+  <!-- Laser scanner joints -->
+  <joint name="base_to_keyence_optical_frame" type="fixed">
+    <parent link="keyence_optical_base"/>
+    <child link="keyence_sensor_optical_frame"/>
+    <origin xyz="0 0 0" rpy="0 0.015 0"/>
+  </joint>
+
+  <joint name="base_to_keyence_tcp_frame" type="fixed">
+    <parent link="tool_base_link"/>
+    <child link="keyence_tcp_frame"/>
+    <origin xyz="0.339156 0.384732 0.360953" rpy="1.58005531679 0.882160345204 2.37121479211"/>
+  </joint>
+
+  <link name="keyence_optical_base"/>
+
+  <joint name="base_to_keyence_optical_base" type="fixed">
+    <parent link="tool_base_link"/>
+    <child link="keyence_optical_base"/>
+    <origin xyz="0.339156 0.384732 0.360953" rpy="-1.5615373368 0.882160345204 2.37121479211"/>
+  </joint>
+
+  <!-- Blending Frame -->
+  <joint name="base_to_blending_tcp" type="fixed">
+    <parent link="tool_base_link"/>
+    <child link="tcp_frame"/>
+    <origin xyz="-0.061890167647 0.064044258542 0.54800788851" rpy="-0.00320361244442 0.880669021029 2.32406931184"/>
+  </joint>
+
+  <!-- Macro-Scanner Frames -->
+  <joint name="base_to_ensenso_optical_frame" type="fixed">
+    <parent link="tool_base_link"/>
+    <child link="ensenso_sensor_optical_frame"/>
+    <origin xyz="0.10869 0.13329 0.24452" rpy="1.57078849029 -0.698132635299 2.35912486931"/>
+  </joint>
+
+  <joint name="base_to_kinect2_move_frame" type="fixed">
+    <parent link="tool_base_link"/>
+    <child link="kinect2_move_frame"/>
+    <origin xyz="0.10869 0.13329 0.24452" rpy="0.698133962102 -6.85595277301e-06 0.788324521691"/>
+  </joint>
+
+  <!-- Special frame for collision avoidance -->
+  <link name="tcp_model">
+    <collision>
+      <geometry>
+        <mesh filename="package://godel_irb4600_support/meshes/collision/tcp.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="tcp_frame_to_model" type="fixed">
+    <parent link="tcp_frame"/>
+    <child link="tcp_model"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+</robot>

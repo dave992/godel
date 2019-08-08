@@ -24,6 +24,36 @@ struct TransitionParameters
   double z_adjust;
 };
 
+struct ToolSpeeds // All (m/s)
+{
+  double process_speed;
+  double traverse_speed;
+  double approach_speed;
+};
+
+struct PathModifiers
+{
+  double tilt_angle;
+  double tool_radius;
+};
+
+struct PathMetaInfo
+{
+  enum class Type
+  {
+    PROCESS, APPROACH, TRAVERSE
+  };
+
+  struct Segment
+  {
+    unsigned size; // number of points
+    Type type;
+  };
+
+  ToolSpeeds speeds;
+  std::vector<Segment> segments;
+};
+
 std::vector<ConnectingPath> generateTransitions(const std::vector<geometry_msgs::PoseArray>& segments,
                                                 const TransitionParameters& params);
 
@@ -42,8 +72,9 @@ std::vector<ConnectingPath> generateTransitions(const std::vector<geometry_msgs:
  */
 godel_process_planning::DescartesTraj
 toDescartesTraj(const std::vector<geometry_msgs::PoseArray>& segments,
-                const double process_speed, const TransitionParameters& transition_params,
-                boost::function<descartes_core::TrajectoryPtPtr(const Eigen::Isometry3d&, const double)> conversion_fn);
+                const ToolSpeeds& speeds, const TransitionParameters& transition_params,
+                boost::function<descartes_core::TrajectoryPtPtr(const Eigen::Isometry3d&, const double)> conversion_fn,
+                const PathModifiers& modifiers, PathMetaInfo* meta = nullptr);
 
 
 }

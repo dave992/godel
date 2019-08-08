@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<robot name="irb4600_workspace" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find abb_irb4600_support)/urdf/irb4600_60_205_macro.xacro"/>
+
+  <xacro:include filename="$(find godel_irb4600_support)/urdf/pushcorp_macro.xacro"/>
+
+  <xacro:property name="riser_height" value=".72871"/>
+
+  <link name="world_frame"/>
+
+  <xacro:abb_irb4600_60_205 prefix=""/>
+
+  <link name="pedestal">
+    <visual>
+      <geometry>
+        <mesh filename="package://godel_irb4600_support/meshes/visual/riser.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://godel_irb4600_support/meshes/collision/riser.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="table">
+    <visual>
+      <geometry>
+        <mesh filename="package://godel_irb4600_support/meshes/visual/table.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://godel_irb4600_support/meshes/collision/table.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="world_to_base_link" type="fixed">
+    <parent link="world_frame"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="base_link_to_pedestal" type="fixed">
+    <parent link="base_link"/>
+    <child link="pedestal"/>
+    <origin xyz="0 0 -${riser_height}" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="base_link_to_table" type="fixed">
+    <parent link="world_frame"/>
+    <child link="table"/>
+    <origin xyz="1.40197 -1.45022 -0.56537" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="tool0_to_pushcorp" type="fixed">
+    <parent link="tool0"/>
+    <child link="tool_base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="no_go_zone">
+    <collision>
+      <origin xyz="0.4 0.75 0.05"/>
+      <geometry>
+        <box size="0.8 1.5 0.1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="table_to_no_go_zone" type="fixed">
+    <parent link="table"/>
+    <child link="no_go_zone"/>
+    <origin xyz="0 0 0.728" rpy="0 0 0"/>
+  </joint>
+
+
+</robot>

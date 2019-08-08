@@ -69,7 +69,10 @@ Eigen::Isometry3d godel_process_planning::createNominalTransform(const Eigen::Is
   Eigen::Isometry3d flip_z;
   flip_z = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY());
 
-  return ref_pose * Eigen::Translation3d(0, 0, z_adjust) * flip_z;
+  Eigen::Affine3d tool_offset;
+  tool_offset = Eigen::AngleAxisd(-tilt_angle, Eigen::Vector3d::UnitY()) * Eigen::Translation3d(tool_radius, 0, 0);
+
+  return ref_pose * Eigen::Translation3d(0, 0, z_adjust) * tool_offset * flip_z;
 }
 
 bool godel_process_planning::descartesSolve(const godel_process_planning::DescartesTraj& in_path,
@@ -221,7 +224,7 @@ trajectory_msgs::JointTrajectory godel_process_planning::getMoveitPlan(
   req.motion_plan_request.num_planning_attempts = DEFAULT_MOVEIT_NUM_PLANNING_ATTEMPTS;
   req.motion_plan_request.max_velocity_scaling_factor = DEFAULT_MOVEIT_VELOCITY_SCALING;
   req.motion_plan_request.allowed_planning_time = DEFAULT_MOVEIT_PLANNING_TIME;
-  req.motion_plan_request.planner_id = DEFAULT_MOVEIT_PLANNER_ID;
+//  req.motion_plan_request.planner_id = DEFAULT_MOVEIT_PLANNER_ID;
 
   req.motion_plan_request.workspace_parameters.header.frame_id = model->getRootLinkName();
   req.motion_plan_request.workspace_parameters.header.stamp = ros::Time::now();
@@ -265,6 +268,7 @@ trajectory_msgs::JointTrajectory godel_process_planning::planFreeMove(
     moveit::core::RobotModelConstPtr moveit_model, const std::vector<double>& start,
     const std::vector<double>& stop)
 {
+  model.setCheckTCPCollisions(true);
   // Attempt joint interpolated motion
   DescartesTraj joint_approach = createJointPath(start, stop);
 
@@ -278,6 +282,10 @@ trajectory_msgs::JointTrajectory godel_process_planning::planFreeMove(
       break;
     }
   }
+
+  model.setCheckTCPCollisions(false);
+
+
 
   // If the method is collision free, then we use the interpolation
   // otherwise let moveit try
@@ -310,11 +318,11 @@ double godel_process_planning::freeSpaceCostFunction(const std::vector<double> &
                                                      const std::vector<double> &target)
 {
   const double FREE_SPACE_MAX_ANGLE_DELTA =
-      M_PI; // The maximum angle a joint during a freespace motion
+      M_PI / 2.0; // The maximum angle a joint during a freespace motion
               // from the start to end position without that motion
               // being penalized. Avoids flips.
   const double FREE_SPACE_ANGLE_PENALTY =
-      2.0; // The factor by which a joint motion is multiplied if said
+      3.0; // The factor by which a joint motion is multiplied if said
            // motion is greater than the max.
 
   // The cost function here penalizes large single joint motions in an effort to
@@ -323,9 +331,12 @@ double godel_process_planning::freeSpaceCostFunction(const std::vector<double> &
   double cost = 0.0;
   for (std::size_t i = 0; i < source.size(); ++i)
   {
-    double diff = std::abs(source[i] - target[i]);
+    double diff = std::pow(std::abs(source[i] - target[i]), 2);
+//    if (i != source.size() - 1) diff *= 3.0;
     if (diff > FREE_SPACE_MAX_ANGLE_DELTA)
+    {
       cost += FREE_SPACE_ANGLE_PENALTY * diff;
+    }
     else
       cost += diff;
   }

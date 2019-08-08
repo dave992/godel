@@ -10,6 +10,12 @@
     <height>563</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="font">
    <font>
     <pointsize>11</pointsize>
@@ -52,7 +58,7 @@
      </font>
     </property>
     <property name="text">
-     <string>World to Object Pose</string>
+     <string>Camera Center Point</string>
     </property>
    </widget>
    <widget class="QFrame" name="frame_2">
@@ -96,7 +102,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Tcp to Cam Pose</string>
+     <string>Part Scan Dimensions</string>
     </property>
    </widget>
    <widget class="QFrame" name="frame_3">

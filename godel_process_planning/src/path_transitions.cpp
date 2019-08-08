@@ -103,11 +103,11 @@ godel_process_planning::generateTransitions(const std::vector<geometry_msgs::Pos
                                             const TransitionParameters& params)
 {
   auto traverse_height = params.traverse_height;
-  if (traverse_height < 0.1)
+  if (traverse_height < 0.05)
   {
-    ROS_WARN("Forcing traverse height to at least 0.1m to protect against broken configurations "
+    ROS_WARN("Forcing traverse height to at least 0.05m to protect against broken configurations "
              "user requested height = %f.", traverse_height);
-    traverse_height = 0.1;
+    traverse_height = 0.05;
   }
   std::vector<ConnectingPath> result;
 
@@ -122,11 +122,22 @@ godel_process_planning::generateTransitions(const std::vector<geometry_msgs::Pos
     tf::poseMsgToEigen(end_pose, e_end);
 
     // Now we want to generate our intermediate waypoints
-    auto approach = retractPath(e_start, params.retract_dist,traverse_height, params.linear_disc,
+    const auto height = i == 0 ? traverse_height * 2.0 : traverse_height;
+    auto approach = retractPath(e_start, params.retract_dist,height, params.linear_disc,
                                 params.angular_disc);
-    auto depart = retractPath(e_end, params.retract_dist, traverse_height, params.linear_disc,
+    auto depart = retractPath(e_end, params.retract_dist, height, params.linear_disc,
                               params.angular_disc);
     std::reverse(approach.begin(), approach.end()); // we flip the 'to' path to keep the time ordering of the path
+
+    auto point_dist = [](const Eigen::Affine3d& a, const Eigen::Affine3d& b) -> double
+    {
+      return (a.translation() - b.translation()).norm();
+    };
+
+    if (point_dist(approach.back(), e_start) < 0.01)
+    {
+      approach.resize(approach.size() - 1);
+    }
 
     ConnectingPath c;
     c.depart = std::move(depart);
@@ -141,28 +152,38 @@ using DescartesConversionFunc =
 
 godel_process_planning::DescartesTraj
 godel_process_planning::toDescartesTraj(const std::vector<geometry_msgs::PoseArray> &segments,
-                                        const double process_speed, const TransitionParameters& transition_params,
-                                        DescartesConversionFunc conversion_fn)
+                                        const ToolSpeeds& speeds, const TransitionParameters& transition_params,
+                                        DescartesConversionFunc conversion_fn, const PathModifiers& modifiers,
+                                        PathMetaInfo* meta)
 {
   auto transitions = generateTransitions(segments, transition_params);
 
   DescartesTraj traj;
   Eigen::Isometry3d last_pose = createNominalTransform(segments.front().poses.front());
 
+  // Keep track of the meta-information about the size and type of each segment of the path
+  PathMetaInfo temp_meta;
+  temp_meta.speeds = speeds;
+
   // Convert pose arrays to Eigen types
   auto eigen_segments = toEigenArrays(segments);
 
   // Inline function for adding a sequence of motions
-  auto add_segment = [&traj, &last_pose, process_speed, conversion_fn, transition_params]
-                     (const EigenSTL::vector_Isometry3d& poses, bool free_last)
+  auto add_segment = [&traj, &last_pose, &temp_meta, modifiers, conversion_fn, transition_params]
+                     (const EigenSTL::vector_Isometry3d& poses, const double speed, bool free_last,
+                      PathMetaInfo::Type type)
   {
+    PathMetaInfo::Segment meta_segment;
+    const auto start_size = traj.size();
+
     // Create Descartes trajectory for the segment path
     for (std::size_t j = 0; j < poses.size(); ++j)
     {
-      Eigen::Isometry3d this_pose = createNominalTransform(poses[j], transition_params.z_adjust);
+      Eigen::Isometry3d this_pose = createNominalTransform(poses[j], transition_params.z_adjust, modifiers.tilt_angle,
+                                                         modifiers.tool_radius);
       // O(1) jerky - may need to revisit this time parameterization later. This at least allows
       // Descartes to perform some optimizations in its graph serach.
-      double dt = (this_pose.translation() - last_pose.translation()).norm() / process_speed;
+      double dt = (this_pose.translation() - last_pose.translation()).norm() / speed;
 
       if (dt < 1e-4)
       {
@@ -176,15 +197,20 @@ godel_process_planning::toDescartesTraj(const std::vector<geometry_msgs::PoseArr
       traj.push_back( conversion_fn(this_pose, dt) );
       last_pose = this_pose;
     }
+
+    const auto end_size = traj.size();
+    meta_segment.size = end_size - start_size;
+    meta_segment.type = type;
+    temp_meta.segments.push_back(meta_segment);
   };
 
   for (std::size_t i = 0; i < segments.size(); ++i)
   {
-    add_segment(transitions[i].approach, false);
+    add_segment(transitions[i].approach, speeds.approach_speed, false, PathMetaInfo::Type::APPROACH);
 
-    add_segment(eigen_segments[i], false);
+    add_segment(eigen_segments[i], speeds.process_speed, false, PathMetaInfo::Type::PROCESS);
 
-    add_segment(transitions[i].depart, false);
+    add_segment(transitions[i].depart, speeds.approach_speed, false, PathMetaInfo::Type::APPROACH);
 
     if (i != segments.size() - 1)
     {
@@ -194,9 +220,12 @@ godel_process_planning::toDescartesTraj(const std::vector<geometry_msgs::PoseArr
       auto connection = interpolateCartesian(transitions[i].depart.back(),
                                              closestRotationalPose(transitions[i].depart.back(), transitions[i+1].approach.front()),
                                              transition_params.linear_disc, transition_params.angular_disc);
-      add_segment(connection, false);
+      add_segment(connection, speeds.traverse_speed, false, PathMetaInfo::Type::TRAVERSE);
     }
   } // end segments
+
+  if (meta)
+    *meta = temp_meta;
 
   return traj;
 }

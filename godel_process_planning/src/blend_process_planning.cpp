@@ -40,6 +40,33 @@ descartes_core::TrajectoryPtPtr toDescartesBlendPt(const Eigen::Isometry3d& pose
                                               AxialSymmetricPt::Z_AXIS, tm);
 }
 
+static godel_msgs::PathMetaInfo convert(const godel_process_planning::PathMetaInfo& meta)
+{
+  godel_msgs::PathMetaInfo msg;
+
+  for (const auto& s : meta.segments)
+  {
+    msg.segment_size.push_back(s.size);
+
+    switch (s.type)
+    {
+    case PathMetaInfo::Type::APPROACH:
+      msg.segment_types.push_back(godel_msgs::PathMetaInfo::SEGMENT_APPROACH_TYPE);
+      break;
+    case PathMetaInfo::Type::PROCESS:
+      msg.segment_types.push_back(godel_msgs::PathMetaInfo::SEGMENT_PROCESS_TYPE);
+      break;
+    case PathMetaInfo::Type::TRAVERSE:
+      msg.segment_types.push_back(godel_msgs::PathMetaInfo::SEGMENT_TRAVERSE_TYPE);
+      break;
+    default:
+      throw std::runtime_error("Unrecognized Meta Info Type");
+    }
+  }
+
+  return msg;
+}
+
 /**
  * @brief Computes a joint motion plan based on input points and the blending process; this includes
  *        motion from current position to process path and back to the starting position.
@@ -78,19 +105,33 @@ bool ProcessPlanningManager::handleBlendPlanning(godel_msgs::BlendProcessPlannin
   const static double RETRACT_DISTANCE = 0.05; // meters
 
   TransitionParameters transition_params;
-  transition_params.linear_disc = LINEAR_DISCRETIZATION;
+  transition_params.linear_disc = req.params.discretization;
   transition_params.angular_disc = ANGULAR_DISCRETIZATION;
   transition_params.retract_dist = RETRACT_DISTANCE;
   transition_params.traverse_height = req.params.safe_traverse_height;
   transition_params.z_adjust = req.params.z_adjust;
 
-  DescartesTraj process_points = toDescartesTraj(req.path.segments, req.params.traverse_spd, transition_params,
-                                                 toDescartesBlendPt);
+  // Load speed parameters and make sure they are sane
+  const static double min_speed = 0.001;
+  ToolSpeeds speeds;
+  speeds.process_speed = std::max(min_speed, req.params.blending_spd);
+  speeds.traverse_speed = std::max(min_speed, req.params.traverse_spd);
+  speeds.approach_speed = std::max(min_speed, req.params.approach_spd);
+
+  PathMetaInfo meta_info;
+
+  PathModifiers modifiers;
+  modifiers.tilt_angle = req.params.tilt ? 0.05 : 0.0; // ~ 3 degrees
+  modifiers.tool_radius = req.params.tilt ? 3 * 0.0254 : 0.0; //req.params.tool_radius; // tool radius
+
+  DescartesTraj process_points = toDescartesTraj(req.path.segments, speeds, transition_params,
+                                                 toDescartesBlendPt, modifiers, &meta_info);
 
   if (generateMotionPlan(blend_model_, process_points, moveit_model_, blend_group_name_,
                          current_joints, res.plan))
   {
     res.plan.type = res.plan.BLEND_TYPE;
+    res.plan.meta_info = convert(meta_info);
     return true;
   }
   else

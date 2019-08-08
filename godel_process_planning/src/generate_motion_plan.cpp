@@ -37,6 +37,11 @@ const static bool validateTrajectory(const trajectory_msgs::JointTrajectory& pts
   return true;
 }
 
+static void printJoints(const std::vector<double>& joints)
+{
+  ROS_INFO("JNTS: %f %f %f %f %f %f", joints[0],joints[1],joints[2],joints[3],joints[4],joints[5]);
+}
+
 bool godel_process_planning::generateMotionPlan(const descartes_core::RobotModelPtr model,
                                                 const std::vector<descartes_core::TrajectoryPtPtr> &traj,
                                                 moveit::core::RobotModelConstPtr moveit_model,
@@ -45,6 +50,7 @@ bool godel_process_planning::generateMotionPlan(const descartes_core::RobotModel
                                                 godel_msgs::ProcessPlan &plan)
 {
 
+  model->setCheckTCPCollisions(false);
   // Generate a graph of the process path joint solutions
   descartes_planner::PlanningGraph planning_graph (model);
   if (!planning_graph.insertGraph(traj)) // builds the graph out
@@ -52,6 +58,7 @@ bool godel_process_planning::generateMotionPlan(const descartes_core::RobotModel
     ROS_ERROR("%s: Failed to build graph. One or more points may have no valid IK solutions", __FUNCTION__);
     return false;
   }
+  model->setCheckTCPCollisions(true);
 
   // Using the valid starting configurations, let's compute an estimate
   // of the cost to move to these configurations from our starting pose
@@ -65,6 +72,7 @@ bool godel_process_planning::generateMotionPlan(const descartes_core::RobotModel
   for (std::size_t i = 0; i < n_start_poses; ++i) // This builds a list of starting poses
   {
     std::vector<double> sol (&joint_data[i * dof], &joint_data[i*dof + dof]);
+//    printJoints(sol);
     process_start_poses.push_back(sol);
   }
 

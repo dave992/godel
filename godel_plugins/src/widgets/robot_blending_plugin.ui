@@ -194,7 +194,7 @@
                          </size>
                         </property>
                         <property name="text">
-                         <string>Sweep Angle Start</string>
+                         <string>Part X (m)</string>
                         </property>
                        </widget>
                       </item>
@@ -237,7 +237,7 @@
                          </size>
                         </property>
                         <property name="text">
-                         <string>SweepAngleEnd</string>
+                         <string>Part Y (m)</string>
                         </property>
                        </widget>
                       </item>
@@ -315,8 +315,14 @@
                     </item>
                     <item>
                      <widget class="QPushButton" name="PushButtonSurfaceOptions">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="text">
                        <string>Surface Options</string>
+                      </property>
+                      <property name="flat">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -616,6 +622,13 @@
                     </property>
                    </widget>
                   </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButtonQAPlan">
+                    <property name="text">
+                     <string>QA Plan</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                 <item>
@@ -631,11 +644,31 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QListWidget" name="ListPathResults"/>
+                   <widget class="QListWidget" name="ListPathResults">
+                    <property name="sizeIncrement">
+                     <size>
+                      <width>0</width>
+                      <height>3</height>
+                     </size>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </item>
                </layout>
+              </item>
+              <item>
+               <widget class="QTextEdit" name="textEditQAFeedback">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
