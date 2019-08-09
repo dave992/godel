@@ -62,8 +62,8 @@ Eigen::Isometry3d godel_process_planning::createNominalTransform(const geometry_
   return createNominalTransform(eigen_pose, z_adjust);
 }
 
-Eigen::Isometry3d godel_process_planning::createNominalTransform(const Eigen::Isometry3d &ref_pose,
-                                                               const double z_adjust)
+Eigen::Isometry3d godel_process_planning::createNominalTransform(const Eigen::Isometry3d &ref_pose, const double z_adjust,
+                                                               const double tilt_angle, const double tool_radius)
 {
   // Reverse the Z axis
   Eigen::Isometry3d flip_z;
