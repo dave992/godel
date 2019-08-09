@@ -268,7 +268,6 @@ trajectory_msgs::JointTrajectory godel_process_planning::planFreeMove(
     moveit::core::RobotModelConstPtr moveit_model, const std::vector<double>& start,
     const std::vector<double>& stop)
 {
-  model.setCheckTCPCollisions(true);
   // Attempt joint interpolated motion
   DescartesTraj joint_approach = createJointPath(start, stop);
 
@@ -283,7 +282,6 @@ trajectory_msgs::JointTrajectory godel_process_planning::planFreeMove(
     }
   }
 
-  model.setCheckTCPCollisions(false);
 
 
 
