@@ -129,7 +129,7 @@ godel_process_planning::generateTransitions(const std::vector<geometry_msgs::Pos
                               params.angular_disc);
     std::reverse(approach.begin(), approach.end()); // we flip the 'to' path to keep the time ordering of the path
 
-    auto point_dist = [](const Eigen::Affine3d& a, const Eigen::Affine3d& b) -> double
+    auto point_dist = [](const Eigen::Isometry3d& a, const Eigen::Isometry3d& b) -> double
     {
       return (a.translation() - b.translation()).norm();
     };

@@ -69,7 +69,7 @@ Eigen::Isometry3d godel_process_planning::createNominalTransform(const Eigen::Is
   Eigen::Isometry3d flip_z;
   flip_z = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY());
 
-  Eigen::Affine3d tool_offset;
+  Eigen::Isometry3d tool_offset;
   tool_offset = Eigen::AngleAxisd(-tilt_angle, Eigen::Vector3d::UnitY()) * Eigen::Translation3d(tool_radius, 0, 0);
 
   return ref_pose * Eigen::Translation3d(0, 0, z_adjust) * tool_offset * flip_z;
