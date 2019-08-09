@@ -4,6 +4,7 @@
 #include <moveit_msgs/ExecuteKnownTrajectory.h>
 
 #include <fstream>
+#include <numeric>
 
 #include "process_utils.h"
 #include "rapid_generator/rapid_emitter.h"
