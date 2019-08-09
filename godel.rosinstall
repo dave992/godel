@@ -7,4 +7,4 @@
 - git: {local-name: swri_profiler, uri: 'https://github.com/swri-robotics/swri_profiler.git', version: master}
 
 - git: {local-name: abb, uri: 'https://github.com/ros-industrial/abb.git', version: kinetic-devel}
-- git: {local-name: cat_laser_scan_qa, uri: 'https://github.com/Jmeyer1292/cat_laser_scan_qa.git', version: master}
+- git: {local-name: cat_laser_scan_qa, uri: 'https://github.com/Jmeyer1292/cat_laser_scan_qa.git', version: test}
