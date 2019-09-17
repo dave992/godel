@@ -1,10 +1,11 @@
-- git: {local-name: descartes, uri: 'https://github.com/dave992/descartes.git', version: melodic-devel}
+- git: {local-name: descartes, uri: 'https://github.com/sam-xl/descartes.git', version: melodic-devel}
 - git: {local-name: godel_openvoronoi, uri: 'https://github.com/ros-industrial-consortium/godel_openvoronoi.git', version: hydro-devel}
-- git: {local-name: godel, uri: 'https://github.com/dave992/godel.git', version: melodic-devel}
+- git: {local-name: godel, uri: 'https://github.com/sam-xl/godel.git', version: melodic-milestone4}
 - git: {local-name: industrial_core, uri: 'https://github.com/ros-industrial/industrial_core.git', version: kinetic-devel}
 - git: {local-name: keyence_experimental, uri: 'https://github.com/ros-industrial/keyence_experimental.git', version: kinetic-devel}
 - git: {local-name: libsocket, uri: 'https://github.com/dermesser/libsocket.git', version: master}
 - git: {local-name: swri_profiler, uri: 'https://github.com/swri-robotics/swri_profiler.git', version: master}
 
 - git: {local-name: abb, uri: 'https://github.com/ros-industrial/abb.git', version: kinetic-devel}
+- git: {local-name: abb_experimental, uri: 'https://github.com/ros-industrial/abb_experimental', version: kinetic-devel}
 - git: {local-name: cat_laser_scan_qa, uri: 'https://github.com/Jmeyer1292/cat_laser_scan_qa.git', version: test}
