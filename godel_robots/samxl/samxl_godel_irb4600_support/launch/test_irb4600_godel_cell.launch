@@ -1,0 +1,9 @@
+<launch>
+    <include file="$(find samxl_godel_irb4600_support)/launch/load_irb4600_godel_cell.launch" />
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+        <param name="use_gui" value="true" />
+    </node>
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find samxl_abb_cell_support)/config/rviz.rviz" required="true"/>
+</launch>

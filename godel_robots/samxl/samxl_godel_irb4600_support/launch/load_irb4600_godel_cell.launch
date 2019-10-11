@@ -1,0 +1,3 @@
+<launch>
+    <param name="robot_description" command="$(find xacro)/xacro '$(find samxl_godel_irb4600_support)/urdf/samxl_irb4600_godel_cell.xacro'"/>
+</launch>
