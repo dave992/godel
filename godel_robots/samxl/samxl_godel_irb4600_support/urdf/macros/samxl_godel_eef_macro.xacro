@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:macro name="samxl_godel_eef" params="prefix">
+        <!-- Links -->
+        <link name="${prefix}base_link">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://samxl_godel_irb4600_support/meshes/visual/godel_eef_with_sensors.stl" />
+                </geometry>
+                <material name="eef_blue">
+                    <color rgba="0.1 0.7 0.7 1"/>
+                </material>
+            </visual>
+            <!-- <collision> -->
+                <!-- <origin xyz="0 0 0" rpy"0 0 0"/> -->
+                <!-- <mesh filename="package://samxl_godel_irb4600_support/meshes/collision/.stl" /> -->
+            <!-- </collision> -->
+        </link>
+        
+        <link name="${prefix}zivid_tool_frame"/>
+        <link name="${prefix}blender_tool_frame"/>
+        <link name="${prefix}scancontrol_tool_frame"/>
+        <link name="${prefix}ensenso_tool_frame"/>
+
+        <!-- Joints -->
+        <joint name="${prefix}base_link_to_${prefix}zivid_tool_frame" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <parent link="${prefix}base_link"/>
+            <child link="${prefix}zivid_tool_frame"/>
+        </joint>
+
+        <joint name="${prefix}base_link_to_${prefix}blender_tool_frame" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <parent link="${prefix}base_link"/>
+            <child link="${prefix}blender_tool_frame"/>
+        </joint>
+
+        <joint name="${prefix}base_link_to_${prefix}scancontrol_tool_frame" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <parent link="${prefix}base_link"/>
+            <child link="${prefix}scancontrol_tool_frame"/>
+        </joint>
+
+        <joint name="${prefix}base_link_to_${prefix}ensenso_tool_frame" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <parent link="${prefix}base_link"/>
+            <child link="${prefix}ensenso_tool_frame"/>
+        </joint>
+
+    </xacro:macro>
+</robot>

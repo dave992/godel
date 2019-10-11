@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <!-- Include External xacro file`s -->
+    <xacro:include filename="$(find samxl_abb_cell_support)/urdf/macros/abb_irb4600_cell_macro.xacro" />
+    <xacro:include filename="$(find samxl_abb_cell_support)/urdf/macros/abb_irb4600_thorlabs_mount_macro.xacro" />
+    <xacro:include filename="$(find samxl_godel_irb4600_support)/urdf/macros/samxl_godel_eef_macro.xacro" />
+
+    <xacro:macro name="samxl_irb4600_godel_cell" params="prefix">
+        <xacro:abb_irb4600_cell prefix="" />
+        <xacro:abb_irb4600_thorlabs_mount prefix="thorlabs_" />
+        <xacro:samxl_godel_eef prefix="godel_eef_" />
+
+        <!-- Joints -->
+        <joint name="${prefix}ft660_tool0_to_${prefix}thorlabs_base_link" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <parent link="${prefix}ft660_tool0"/>
+            <child link="${prefix}thorlabs_base_link"/>
+        </joint>
+
+        <joint name="${prefix}thorlabs_tool0_to_${prefix}godel_eef_base_link" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <parent link="${prefix}thorlabs_tool0"/>
+            <child link="${prefix}godel_eef_base_link"/>
+        </joint>
+    </xacro:macro>
+</robot>
