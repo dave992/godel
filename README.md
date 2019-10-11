@@ -16,6 +16,7 @@ Godel: Austrian logician and mathematician http://en.wikipedia.org/wiki/Kurt_G%C
   wstool init . 
   wstool merge https://github.com/sam-xl/godel/raw/kinetic-milestone4/godel.rosinstall
   wstool update
+  git clone https://gitlab.tudelft.nl/samxl/samxl_abb_cell.git
   rosdep install --from-paths . --ignore-src
   ```
 
