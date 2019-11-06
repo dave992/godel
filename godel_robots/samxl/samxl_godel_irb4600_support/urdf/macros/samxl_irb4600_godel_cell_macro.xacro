@@ -10,7 +10,15 @@
         <xacro:abb_irb4600_thorlabs_mount prefix="thorlabs_" />
         <xacro:samxl_godel_eef prefix="godel_eef_" />
 
+        <link name="world_frame"/>
+
         <!-- Joints -->
+        <joint name="world_to_pedestal_base_link" type="fixed">
+            <parent link="world_frame"/>
+            <child link="pedestal_base_link"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </joint>
+
         <joint name="${prefix}ft660_tool0_to_${prefix}thorlabs_base_link" type="fixed">
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <parent link="${prefix}ft660_tool0"/>

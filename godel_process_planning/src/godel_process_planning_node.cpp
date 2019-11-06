@@ -15,6 +15,7 @@ int main(int argc, char** argv)
   std::string world_frame, blend_group, keyence_group, blend_tcp, keyence_tcp, robot_model_plugin;
   pnh.param<std::string>("world_frame", world_frame, "world_frame");
   pnh.param<std::string>("blend_group", blend_group, "manipulator_tcp");
+  // TODO Generalize name "keyence_group"
   pnh.param<std::string>("keyence_group", keyence_group, "manipulator_keyence");
   pnh.param<std::string>("blend_tcp", blend_tcp, "tcp_frame");
   pnh.param<std::string>("keyence_tcp", keyence_tcp, "keyence_tcp_frame");

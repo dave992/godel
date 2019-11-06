@@ -53,11 +53,11 @@ const double RobotScan::MIN_JOINT_VELOCITY = 0.01f;      // rad/sect
 
 RobotScan::RobotScan()
 {
-
-  params_.group_name = "manipulator_asus";
-  params_.home_position = "home";
+  // TODO Load hard-coded strings [group_name, home_pos, world_frame and tcp_frame] from parameter server (or config file)
+  params_.group_name = "manipulator_zivid";
+  params_.home_position = "HomeTable";
   params_.world_frame = "world_frame";
-  params_.tcp_frame = "kinect2_move_frame";
+  params_.tcp_frame = "godel_eef_zivid_tool_frame";
   tf::poseTFToMsg(tf::Transform::getIdentity(), params_.tcp_to_cam_pose);
   tf::poseTFToMsg(tf::Transform::getIdentity(), params_.world_to_obj_pose);
   params_.cam_to_obj_zoffset = 0;
