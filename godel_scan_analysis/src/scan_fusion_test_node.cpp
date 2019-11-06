@@ -52,7 +52,7 @@ int main(int argc, char** argv)
   ros::NodeHandle nh, pnh ("~");
 
   // Read params
-  std::string base_frame = pnh.param<std::string>("base_frame", "base_link");
+  std::string base_frame = pnh.param<std::string>("base_frame", "abb_irb4600_base_link");
   std::string scan_frame = pnh.param<std::string>("scan_frame", "keyence_sensor_optical_frame");
 
   godel_scan_analysis::ProfileFusionParameters params;

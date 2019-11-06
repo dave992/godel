@@ -3,7 +3,7 @@
   <!-- The planning and execution components of MoveIt! configured to run -->
   <!-- using the ROS-Industrial interface. -->
  
-  <rosparam command="load" file="$(find abb_irb4600_support)/config/joint_names_irb4600_40_255.yaml"/>
+  <rosparam command="load" file="$(find samxl_godel_irb4600_support)/config/joint_names_irb4600_40_255.yaml"/>
  
   <!-- the "sim" argument controls whether we connect to a Simulated or Real robot -->
   <arg name="sim" default="true" />
