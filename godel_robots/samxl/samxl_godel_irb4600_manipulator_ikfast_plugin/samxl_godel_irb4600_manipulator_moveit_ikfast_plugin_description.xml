@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<library path="lib/libsamxl_godel_irb4600_manipulator_moveit_ikfast_plugin">
+  <class base_class_type="kinematics::KinematicsBase" name="samxl_godel_irb4600_manipulator/IKFastKinematicsPlugin" type="samxl_godel_irb4600_manipulator::IKFastKinematicsPlugin">
+    <description>IKFast61 plugin for closed-form kinematics of samxl_godel_irb4600 manipulator</description>
+  </class>
+</library>
