@@ -9,7 +9,7 @@
   <arg name="real_pcd" default="false"/>
   <arg name="pcd_location"/> <!-- path to pcd file of part -->
   <arg name="pcd_frame" default="/abb_irb4600_base_link"/>
-  <arg name="debug_rviz" default="false"/>
+  <arg name="debug_rviz" default="true"/>
   <arg name="debug_core" default="false"/> <!--Brings up the surface blending service in debug mode-->
   <arg name="save_data" default="false" />
   <arg name="save_location" default="$(env HOME)/.ros/" />

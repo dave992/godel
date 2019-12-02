@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="samxl_godel_irb4600_cell" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="samxl_godel_irb4600" xmlns:xacro="http://ros.org/wiki/xacro">
     <xacro:include filename="$(find samxl_godel_irb4600_support)/urdf/macros/samxl_irb4600_godel_cell_macro.xacro"/>
     <xacro:samxl_irb4600_godel_cell prefix=""/>
 </robot>

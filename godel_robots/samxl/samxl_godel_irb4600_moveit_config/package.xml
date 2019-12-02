@@ -3,7 +3,7 @@
   <name>samxl_godel_irb4600_moveit_config</name>
   <version>0.3.0</version>
   <description>
-     An automatically generated package with all the configuration and launch files for using the samxl_godel_irb4600_cell with the MoveIt! Motion Planning Framework
+     An automatically generated package with all the configuration and launch files for using the samxl_godel_irb4600 with the MoveIt! Motion Planning Framework
   </description>
   <author email="d.kroezen@tudelft.nl">Dave Kroezen</author>
   <maintainer email="d.kroezen@tudelft.nl">Dave Kroezen</maintainer>

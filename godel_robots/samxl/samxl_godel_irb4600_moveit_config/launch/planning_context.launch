@@ -9,7 +9,7 @@
   <param if="$(arg load_robot_description)" name="$(arg robot_description)" command="xacro  '$(find samxl_godel_irb4600_support)/urdf/samxl_irb4600_godel_cell.xacro'"/>
 
   <!-- The semantic description that corresponds to the URDF -->
-  <param name="$(arg robot_description)_semantic" textfile="$(find samxl_godel_irb4600_moveit_config)/config/samxl_godel_irb4600_cell.srdf" />
+  <param name="$(arg robot_description)_semantic" textfile="$(find samxl_godel_irb4600_moveit_config)/config/samxl_godel_irb4600.srdf" />
 
   <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">

@@ -4,8 +4,8 @@ moveit_setup_assistant_config:
     relative_path: urdf/samxl_irb4600_godel_cell.xacro
     xacro_args: ""
   SRDF:
-    relative_path: config/samxl_godel_irb4600_cell.srdf
+    relative_path: config/samxl_godel_irb4600.srdf
   CONFIG:
     author_name: Dave Kroezen
     author_email: d.kroezen@tudelft.nl
-    generated_timestamp: 1572955319
+    generated_timestamp: 1575295168
