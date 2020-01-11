@@ -11,3 +11,10 @@
 # ABB Robot
 - git: {local-name: abb, uri: 'https://github.com/ros-industrial/abb.git', version: kinetic-devel}
 - git: {local-name: abb_experimental, uri: 'https://github.com/sam-xl/abb_experimental', version: kinetic-devel}
+
+# Noether
+- git: {local-name: noether, uri: 'https://github.com/ros-industrial/noether.git', version: master}
+- git: {local-name: godel_noether, uri: 'https://github.com/sam-xl/godel_noether', version: master}
+
+# SAM|XL Robot Cell
+- git: {local-name: samxl_abb_cell, uri: 'git@gitlab.tudelft.nl:samxl/samxl_abb_cell.git', version: master}
