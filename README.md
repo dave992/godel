@@ -16,9 +16,13 @@ Godel: Austrian logician and mathematician http://en.wikipedia.org/wiki/Kurt_G%C
   wstool init . 
   wstool merge https://github.com/sam-xl/godel/raw/kinetic-milestone4/godel.rosinstall
   wstool update
-  git clone https://gitlab.tudelft.nl/samxl/samxl_abb_cell.git
   rosdep install --from-paths . --ignore-src
   ```
+
+  To use the SAM|XL godel cell, clone :
+  - Clone the [samxl_abb_cell](https://gitlab.tudelft.nl/samxl/samxl_abb_cell.git) package in your workspace.
+  - Clone the [noether package](https://github.com/ros-industrial/noether.git) package in your workspace. (To use, first install the dependencies of noether, which include VTK 8.2 and PCL 1.9.1. Installation steps are explained on the Noether page.)
+  - Clone the [godel_noether](https://github.com/Jmeyer1292/godel_noether) package in your workspace.
 
 - Finally, to build:
   ```

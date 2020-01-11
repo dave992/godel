@@ -8,4 +8,4 @@
 
 - git: {local-name: abb, uri: 'https://github.com/ros-industrial/abb.git', version: kinetic-devel}
 - git: {local-name: abb_experimental, uri: 'https://github.com/sam-xl/abb_experimental', version: add_irb4600_variants}
-- git: {local-name: cat_laser_scan_qa, uri: 'https://github.com/Jmeyer1292/cat_laser_scan_qa.git', version: test}
+- git: {local-name: cat_laser_scan_qa, uri: 'https://github.com/sam-xl/cat_laser_scan_qa.git', version: test}
